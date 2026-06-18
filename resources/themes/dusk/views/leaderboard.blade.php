@@ -11,12 +11,12 @@
         </x-page-header>
 
         <div class="grid grid-cols-1 gap-5 md:grid-cols-3 mt-4">
-            <x-leaderboard-card title="{{ __('Top credits') }}" icon="credits.png" :data="$credits" valueKey="credits" valueType="Credits" />
-            <x-leaderboard-card title="{{ __('Top duckets') }}" icon="duckets.png" :data="$duckets" relationship="user" valueKey="amount" valueType="Duckets" />
-            <x-leaderboard-card title="{{ __('Top diamonds') }}" icon="diamond.png" :data="$diamonds" relationship="user" valueKey="amount" valueType="Diamonds" />
-            <x-leaderboard-card title="{{ __('Hours online') }}" icon="clock.gif" :data="$mostOnline" relationship="user" valueKey="online_time" valueType="Hours online" :formatValue="fn($value) => round($value / 3600)" />
-            <x-leaderboard-card title="{{ __('Respects received') }}" icon="heart.gif" :data="$respectsReceived" relationship="user" valueKey="respects_received" valueType="Respect received" />
-            <x-leaderboard-card title="{{ __('Achievement score') }}" icon="star.gif" :data="$achievementScores" relationship="user" valueKey="achievement_score" valueType="Achievement points" />
+            <x-leaderboard-card title="{{ __('Top credits') }}" icon="credits.png" :data="$credits" relationship="player" valueKey="credit_balance" valueType="Credits" />
+            <x-leaderboard-card title="{{ __('Top duckets') }}" icon="duckets.png" :data="$duckets" relationship="player" valueKey="pixel_balance" valueType="Duckets" />
+            <x-leaderboard-card title="{{ __('Top diamonds') }}" icon="diamond.png" :data="$diamonds" relationship="player" valueKey="seasonal_balance" valueType="Diamonds" />
+            <x-leaderboard-card title="{{ __('Gamer of the Week') }}" icon="gotw.png" :data="$gotw" relationship="player" valueKey="gotw_points" valueType="GOTW Points" />
+            <x-leaderboard-card title="{{ __('Respects received') }}" icon="heart.gif" :data="$respectsReceived" relationship="player" valueKey="respect_points" valueType="Respect received" />
+            <x-leaderboard-card title="{{ __('Achievement score') }}" icon="star.gif" :data="$achievementScores" relationship="player" valueKey="achievement_score" valueType="Achievement points" />
         </div>
     </div>
 </x-app-layout>

@@ -26,3 +26,14 @@ Route::prefix('wallet')->group(function () {
     Route::post('/register',  [WalletAuthController::class, 'register']);
     Route::post('/logout',    [WalletAuthController::class, 'logout']);
 });
+
+use App\Http\Controllers\Api\ClubPaymentController;
+
+// Public: package list for the in-game catalog (display only).
+Route::get('/club/packages', [ClubPaymentController::class, 'packages'])->middleware('throttle:60,1');
+
+// Internal: called server-to-server by the emulator (X-Internal-Secret). Not for clients.
+Route::prefix('internal/club')->group(function () {
+    Route::post('/intent', [ClubPaymentController::class, 'intent']);
+    Route::post('/verify', [ClubPaymentController::class, 'verify']);
+});

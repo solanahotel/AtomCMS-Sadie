@@ -9,6 +9,7 @@ export default defineConfig({
             input: [
                 path.resolve(__dirname, "css/app.scss"),
                 path.resolve(__dirname, "js/app.js"),
+                path.resolve(__dirname, "js/wallet/wallet-auth.js"),
                 "resources/js/global.js",
                 "resources/css/global.scss",
             ],

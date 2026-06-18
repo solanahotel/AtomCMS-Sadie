@@ -29,7 +29,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->foreign('give_rank')->references('id')->on('permissions')->nullOnDelete();
+            $table->foreign('give_rank')->references('id')->on('roles')->nullOnDelete();
         });
     }
 

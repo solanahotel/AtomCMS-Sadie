@@ -5,27 +5,74 @@
     <div class="col-span-12 md:col-span-6 min-h-[250px] bg-gray-900/50 rounded-xl flex flex-col py-6 px-8 text-white">
         <h2 class="text-2xl">Login</h2>
 
-        <form action="{{ route('login') }}" method="POST">
-            @csrf
+        <div x-data="walletLogin()" x-init="init()" class="flex flex-col gap-y-3 mt-4">
 
-            <div class="relative w-full overflow-hidden text-black">
-                <input id="username-input" type="text" placeholder="Enter your username" name="username" class="relative py-2 rounded-md mt-3 w-full">
+            <!-- Connect button -->
+            <template x-if="step === 'connect'">
+                <button
+                    @click="connectWallet()"
+                    class="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 px-4 rounded-md transition duration-300 ease-in-out hover:scale-[102%]"
+                >
+                    <span>◆ Connect Phantom Wallet</span>
+                </button>
+            </template>
 
-                <img id="user-avatar" class="absolute right-0 -top-4" src="{{ asset('/assets/images/dusk/ghost.png') }}" alt="">
-            </div>
+            <!-- Loading state -->
+            <template x-if="step === 'loading'">
+                <div class="flex items-center justify-center gap-2 text-gray-300 py-3">
+                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span x-text="statusMessage"></span>
+                </div>
+            </template>
 
-            <input type="password" placeholder="Enter your password" name="password" class="relative py-2 rounded-md mt-3 text-black w-full">
+            <!-- Username picker for new users -->
+            <template x-if="step === 'needs_username'">
+                <div class="flex flex-col gap-y-3">
+                    <div class="bg-yellow-500/20 border border-yellow-400 rounded-md p-3 text-sm text-yellow-200">
+                        {{ __('This wallet is new! Choose a username carefully — it cannot be changed later.') }}
+                    </div>
 
-            <x-site-captchas />
+                    <input
+                        type="text"
+                        x-model="username"
+                        placeholder="{{ __('Choose your username') }}"
+                        maxlength="25"
+                        class="py-2 px-3 rounded-md w-full text-black"
+                    />
 
-            <div class="mt-4 flex gap-4">
-                <button type="submit" class="py-2 px-4 text-white bg-yellow-500 border-2 border-yellow-300 w-full rounded-md transition duration-300 ease-in-out hover:scale-[102%]">Login</button>
+                    <button
+                        @click="registerUsername()"
+                        class="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-md transition duration-300 ease-in-out hover:scale-[102%]"
+                    >
+                        {{ __('Confirm & Create Account') }}
+                    </button>
+                </div>
+            </template>
 
-                <a href="{{ route('register') }}" class="w-full">
-                    <button type="button" class="py-2 px-4 text-white bg-gray-700 border-2 border-gray-600 w-full rounded-md transition duration-300 ease-in-out hover:scale-[102%]">Register</button>
+            <!-- Success state -->
+            <template x-if="step === 'success'">
+                <div class="flex items-center justify-center gap-2 text-green-400 py-3 font-semibold">
+                    <span x-text="statusMessage"></span>
+                </div>
+            </template>
+
+            <!-- Error message -->
+            <template x-if="errorMessage">
+                <div class="bg-red-500/20 border border-red-400 rounded-md p-3 text-sm text-red-300">
+                    <span x-text="errorMessage"></span>
+                </div>
+            </template>
+
+            <div class="text-center text-sm text-gray-400 mt-1">
+                {{ __('Don\'t have Phantom?') }}
+                <a href="https://phantom.app/" target="_blank" class="underline hover:text-purple-300">
+                    {{ __('Install it here') }}
                 </a>
             </div>
-        </form>
+        </div>
     </div>
 
     {{-- Articles --}}
@@ -66,46 +113,62 @@
         @endforeach
     </div>
 
-    <script>
-        function debounce(func, wait) {
-            let timeout;
-            return function() {
-                const context = this, args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), wait);
-            };
-        }
+    @push('scripts')
+        @vite('resources/themes/dusk/js/wallet/wallet-auth.js')
+        <script>
+            function walletLogin() {
+                return {
+                    step: 'connect',
+                    statusMessage: '',
+                    errorMessage: '',
+                    username: '',
+                    walletAddress: null,
+                    auth: null,
 
-        const avatar = document.getElementById('user-avatar');
-        const usernameInput = document.getElementById('username-input');
+                    init() {
+                        this.auth = new WalletAuth();
+                    },
 
-        const updateAvatar = debounce(async () => {
-            const username = usernameInput.value;
-            if (!username) return;
+                    connectWallet() {
+                        this.errorMessage = '';
+                        this.auth.connect((status, message) => {
+                            if (status === 'loading') {
+                                this.step = 'loading';
+                                this.statusMessage = message;
+                            } else if (status === 'error') {
+                                this.step = 'connect';
+                                this.errorMessage = message;
+                            } else if (status === 'needs_username') {
+                                this.step = 'needs_username';
+                                this.walletAddress = message;
+                            } else if (status === 'success') {
+                                this.step = 'success';
+                                this.statusMessage = message;
+                            }
+                        });
+                    },
 
-            try {
-                const response = await fetch(`/api/user/${username}`);
-                if (!response.ok) {
-                    console.error('Failed to fetch avatar');
-                    return;
+                    registerUsername() {
+                        this.errorMessage = '';
+                        if (!this.username || this.username.length < 3) {
+                            this.errorMessage = 'Username must be at least 3 characters.';
+                            return;
+                        }
+                        this.auth.register(this.username, (status, message) => {
+                            if (status === 'loading') {
+                                this.step = 'loading';
+                                this.statusMessage = message;
+                            } else if (status === 'error') {
+                                this.step = 'needs_username';
+                                this.errorMessage = message;
+                            } else if (status === 'success') {
+                                this.step = 'success';
+                                this.statusMessage = message;
+                            }
+                        });
+                    },
                 }
-
-                const data = await response.json();
-
-
-                if (!data.data.look) {
-                    avatar.src = "/assets/images/dusk/ghost.png";
-
-                    return;
-                }
-
-                avatar.src = '{{ setting('avatar_imager') }}' + '/' + data.data.look + '&direction=4&action=wav&head_direction=3';
-            } catch (error) {
-                console.error('An error occurred:', error);
             }
-        }, 200);
-
-        usernameInput.addEventListener('keyup', updateAvatar);
-
-    </script>
+        </script>
+    @endpush
 </x-app-layout>

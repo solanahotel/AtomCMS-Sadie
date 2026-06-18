@@ -1,10 +1,7 @@
 <?php
-
 namespace Database\Seeders;
-
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -18,30 +15,22 @@ class DatabaseSeeder extends Seeder
             WebsiteLanguageSeeder::class,
             WebsitePermissionSeeder::class,
             WebsiteWordfilterSeeder::class,
-            WebsiteMaintenanceTasksSeeder::class,
-
-            WebsiteArticleSeeder::class,
-            WebsiteTeamSeeder::class,
-
+            // WebsiteMaintenanceTasksSeeder::class,
+            // WebsiteArticleSeeder::class,
+            // WebsiteTeamSeeder::class,
             // Shop
-            WebsiteShopCategoriesSeeder::class,
-            WebsiteShopArticleSeeder::class,
-
+            // WebsiteShopCategoriesSeeder::class,
+            // WebsiteShopArticleSeeder::class,
             // Help center
-            WebsiteRuleCategorySeeder::class,
-            WebsiteRuleSeeder::class,
-            WebsiteHelperCenterCategorySeeder::class,
-            WebsiteHelperCenterCategorySeeder::class,
-
+            // WebsiteRuleCategorySeeder::class,
+            // WebsiteRuleSeeder::class,
+            // WebsiteHelperCenterCategorySeeder::class,
             // Values
-            WebsiteRareValuesCategorySeeder::class,
-
+            // WebsiteRareValuesCategorySeeder::class,
             // Housekeeping permissions
-            HousekeepingPermissionSeeder::class,
+            // HousekeepingPermissionSeeder::class,
         ]);
-
         // \App\Models\User::factory(10)->create();
-
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',

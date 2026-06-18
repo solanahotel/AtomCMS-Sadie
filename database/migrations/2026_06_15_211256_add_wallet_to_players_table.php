@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('players', function (Blueprint $table) {
+            $table->string('wallet_address', 44)->nullable()->unique()->after('id');
+            $table->timestamp('wallet_verified_at')->nullable()->after('wallet_address');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('players', function (Blueprint $table) {
+            $table->dropColumn(['wallet_address', 'wallet_verified_at']);
+        });
+    }
+};

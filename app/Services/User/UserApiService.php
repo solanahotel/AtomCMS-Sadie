@@ -14,7 +14,9 @@ class UserApiService
 
     public function onlineUsers($columns = ['username', 'motto', 'look'], bool $randomOrder = true): Builder
     {
-        $query = User::select($columns)->where('online', '=', '1');
+        // `players` has no `online` column in Sadie — online status lives in
+        // player_data.is_online. Filter via the data relation.
+        $query = User::select($columns)->whereHas('data', fn ($q) => $q->where('is_online', 1));
 
         if ($randomOrder) {
             $query = $query->inRandomOrder();
@@ -25,6 +27,6 @@ class UserApiService
 
     public function onlineUserCount(): int
     {
-        return User::where('online', '=', '1')->count();
+        return User::whereHas('data', fn ($q) => $q->where('is_online', 1))->count();
     }
 }

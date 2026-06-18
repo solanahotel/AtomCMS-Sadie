@@ -23,3 +23,7 @@ yarn.lock
 /public/assets/images/generated-logos
 CLAUDE.md
 .phpunit.cache
+# Local DB snapshots (kept out of the repo; back up separately)
+backup-*.sql
+# Stray artifact from a mistyped command
+build:atom

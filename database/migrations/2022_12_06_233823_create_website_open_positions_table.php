@@ -14,7 +14,7 @@ return new class extends Migration
 
         Schema::create('website_open_positions', function (Blueprint $table) {
             $table->id();
-            $table->integer('permission_id');
+            $table->unsignedInteger('permission_id');
             $table->string('description');
             $table->timestamp('apply_from')->nullable();
             $table->timestamp('apply_to')->nullable();

@@ -17,3 +17,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user/{username}', [HotelApiController::class, 'fetchUser'])->name('api.fetch-user')->middleware('throttle:50,1');
 Route::get('/online-users', [HotelApiController::class, 'onlineUsers'])->name('api.online-users')->middleware('throttle:50,1');
 Route::get('/online-count', [HotelApiController::class, 'onlineUserCount'])->name('api.online-count')->middleware('throttle:50,1');
+
+use App\Http\Controllers\Api\WalletAuthController;
+
+Route::prefix('wallet')->group(function () {
+    Route::post('/challenge', [WalletAuthController::class, 'challenge']);
+    Route::post('/verify',    [WalletAuthController::class, 'verify']);
+    Route::post('/register',  [WalletAuthController::class, 'register']);
+    Route::post('/logout',    [WalletAuthController::class, 'logout']);
+});

@@ -53,19 +53,20 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     protected $guarded = ['id'];
 
-    protected $hidden = ['id', 'password', 'remember_token'];
+    protected $hidden = ['id', 'password', 'remember_token', 'wallet_address'];
 
     protected $table = 'players';
 
     protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'hidden_staff' => 'boolean',
-            'online' => 'boolean',
-        ];
-    }
+{
+    return [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'hidden_staff' => 'boolean',
+        'online' => 'boolean',
+        'wallet_verified_at' => 'datetime',
+    ];
+}
 
     public function sessions()
     {
@@ -386,7 +387,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function getOnlineAttribute(): bool
     {
-        return (bool) ($this->data->is_online ?? false);
+        return (bool) ($this->data?->is_online ?? false);
     }
 
     public function getLookAttribute(): ?string

@@ -99,6 +99,109 @@ class SolanaPaymentService
         }
     }
 
+    /** Native SOL balance of a wallet (in SOL). Throws on RPC error. */
+    public function getSolBalance(string $wallet): float
+    {
+        $resp = Http::timeout(12)->post(config('solana.rpc_url'), [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getBalance',
+            'params' => [$wallet],
+        ]);
+
+        if (!$resp->ok()) {
+            throw new \RuntimeException('RPC error: ' . $resp->status());
+        }
+
+        return ((int) data_get($resp->json(), 'result.value', 0)) / self::LAMPORTS_PER_SOL;
+    }
+
+    /**
+     * Total $HOTEL (SPL) ui-balance a wallet holds for a given mint. Used by the access gate.
+     * Throws on RPC error so the caller can fail-open (never lock players out on RPC trouble).
+     */
+    public function getTokenBalance(string $wallet, string $mint): float
+    {
+        $resp = Http::timeout(12)->post(config('solana.rpc_url'), [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getTokenAccountsByOwner',
+            'params' => [$wallet, ['mint' => $mint], ['encoding' => 'jsonParsed']],
+        ]);
+
+        if (!$resp->ok()) {
+            throw new \RuntimeException('RPC error: ' . $resp->status());
+        }
+
+        $total = 0.0;
+        foreach ((array) data_get($resp->json(), 'result.value', []) as $acc) {
+            $total += (float) data_get($acc, 'account.data.parsed.info.tokenAmount.uiAmount', 0);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Verify a finalized $HOTEL (SPL) swap that paid the seller AND the treasury in one tx.
+     * Checks: executed ok, fee-payer = buyer wallet, reference memo present, the seller's token
+     * account (mint=$HOTEL) increased by >= sellerAmount, and treasury's by >= feeAmount. Fail-closed.
+     */
+    public function verifyHotelSwap(
+        string $signature,
+        string $mint,
+        string $payerWallet,
+        string $sellerWallet,
+        string $treasuryWallet,
+        float $sellerAmount,
+        float $feeAmount,
+        string $reference
+    ): bool {
+        try {
+            $tx = $this->getTransaction($signature);
+            if (!$tx || data_get($tx, 'meta.err') !== null) {
+                return false;
+            }
+
+            $accountKeys = $this->accountPubkeys($tx);
+            if (empty($accountKeys) || !hash_equals($payerWallet, (string) $accountKeys[0])) {
+                return false;
+            }
+
+            if (!$this->isMemoMatch($tx, $reference)) {
+                return false;
+            }
+
+            $sellerDelta = $this->tokenDelta($tx, $mint, $sellerWallet);
+            $treasuryDelta = $this->tokenDelta($tx, $mint, $treasuryWallet);
+
+            // 0.1% tolerance for rounding at token-decimal precision.
+            return $sellerDelta >= ($sellerAmount * 0.999) && $treasuryDelta >= ($feeAmount * 0.999);
+        } catch (\Throwable $e) {
+            Log::error('hotel-swap: verify exception', ['sig' => $signature, 'error' => $e->getMessage()]);
+            return false; // fail-closed
+        }
+    }
+
+    /** Net ui-amount change of the (owner, mint) token balance across the tx (post - pre). */
+    private function tokenDelta(array $tx, string $mint, string $owner): float
+    {
+        $pre = 0.0;
+        $post = 0.0;
+
+        foreach ((array) data_get($tx, 'meta.preTokenBalances', []) as $b) {
+            if (($b['mint'] ?? '') === $mint && ($b['owner'] ?? '') === $owner) {
+                $pre += (float) data_get($b, 'uiTokenAmount.uiAmount', 0);
+            }
+        }
+        foreach ((array) data_get($tx, 'meta.postTokenBalances', []) as $b) {
+            if (($b['mint'] ?? '') === $mint && ($b['owner'] ?? '') === $owner) {
+                $post += (float) data_get($b, 'uiTokenAmount.uiAmount', 0);
+            }
+        }
+
+        return $post - $pre;
+    }
+
     private function getTransaction(string $signature): ?array
     {
         $resp = Http::timeout(15)->post(config('solana.rpc_url'), [

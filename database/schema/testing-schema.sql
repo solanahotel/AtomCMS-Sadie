@@ -111630,14 +111630,63 @@ CREATE TABLE `player_bans` (
   `reason` longtext NOT NULL,
   `created_at` datetime(6) NOT NULL,
   `expires_at` datetime(6) DEFAULT NULL,
+  `ticket_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ix_player_bans_creator_id` (`creator_id`),
   KEY `ix_player_bans_player_id` (`player_id`),
+  KEY `ix_player_bans_ticket_id` (`ticket_id`),
   CONSTRAINT `fk_player_bans_players_creator_id` FOREIGN KEY (`creator_id`) REFERENCES `players` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_player_bans_players_player_id` FOREIGN KEY (`player_id`) REFERENCES `players` (`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_player_bans_players_player_id` FOREIGN KEY (`player_id`) REFERENCES `players` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_player_bans_cfh_tickets_ticket_id` FOREIGN KEY (`ticket_id`) REFERENCES `cfh_tickets` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 -- Dumpen data van tabel sadie.player_bans: ~0 rows (ongeveer)
+
+-- Structuur van  tabel sadie.player_sanctions wordt geschreven
+CREATE TABLE `player_sanctions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `creator_id` bigint(20) NOT NULL,
+  `player_id` bigint(20) NOT NULL,
+  `type` varchar(32) NOT NULL,
+  `reason` longtext NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `expires_at` datetime(6) DEFAULT NULL,
+  `ticket_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_player_sanctions_creator_id` (`creator_id`),
+  KEY `ix_player_sanctions_player_id` (`player_id`),
+  KEY `ix_player_sanctions_ticket_id` (`ticket_id`),
+  CONSTRAINT `fk_player_sanctions_players_creator_id` FOREIGN KEY (`creator_id`) REFERENCES `players` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_player_sanctions_players_player_id` FOREIGN KEY (`player_id`) REFERENCES `players` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_player_sanctions_cfh_tickets_ticket_id` FOREIGN KEY (`ticket_id`) REFERENCES `cfh_tickets` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- Dumpen data van tabel sadie.player_sanctions: ~0 rows (ongeveer)
+
+-- Structuur van  tabel sadie.cfh_tickets wordt geschreven
+CREATE TABLE `cfh_tickets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `reporter_id` bigint(20) NOT NULL,
+  `reported_id` bigint(20) DEFAULT NULL,
+  `room_id` int(11) DEFAULT NULL,
+  `category_id` int(11) NOT NULL,
+  `message` longtext NOT NULL,
+  `state` varchar(16) NOT NULL,
+  `handler_id` bigint(20) DEFAULT NULL,
+  `resolution` varchar(16) DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) DEFAULT NULL,
+  `closed_at` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ix_cfh_tickets_reporter_id` (`reporter_id`),
+  KEY `ix_cfh_tickets_reported_id` (`reported_id`),
+  KEY `ix_cfh_tickets_handler_id` (`handler_id`),
+  CONSTRAINT `fk_cfh_tickets_players_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `players` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cfh_tickets_players_reported_id` FOREIGN KEY (`reported_id`) REFERENCES `players` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cfh_tickets_players_handler_id` FOREIGN KEY (`handler_id`) REFERENCES `players` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+-- Dumpen data van tabel sadie.cfh_tickets: ~0 rows (ongeveer)
 
 -- Structuur van  tabel sadie.player_bots wordt geschreven
 CREATE TABLE `player_bots` (

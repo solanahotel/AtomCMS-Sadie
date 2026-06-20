@@ -7,7 +7,7 @@
             <x-leaderboard-card title="{{ __('Top duckets') }}" icon="duckets.png" :data="$duckets" relationship="player" valueKey="pixel_balance" valueType="Duckets" />
             <x-leaderboard-card title="{{ __('Top diamonds') }}" icon="diamond.png" :data="$diamonds" relationship="player" valueKey="seasonal_balance" valueType="Diamonds" />
             <x-leaderboard-card title="{{ __('Gamer of the Week') }}" icon="gotw.png" :data="$gotw" relationship="player" valueKey="gotw_points" valueType="GOTW Points" />
-            <x-leaderboard-card title="{{ __('Respects received') }}" icon="heart.gif" :data="$respectsReceived" relationship="player" valueKey="respect_points" valueType="Respect received" />
+            <x-leaderboard-card title="{{ __('Respects received') }}" icon="heart.gif" :data="$respectsReceived" relationship="player" valueKey="respects_received" valueType="Respect received" />
             <x-leaderboard-card title="{{ __('Achievement score') }}" icon="star.gif" :data="$achievementScores" relationship="player" valueKey="achievement_score" valueType="Achievement points" />
         </div>
     </div>

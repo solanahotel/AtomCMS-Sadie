@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Community;
 use App\Http\Controllers\Controller;
 use App\Models\User\PlayerData;
 use App\Services\Community\StaffService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 
 class LeaderboardController extends Controller
@@ -18,48 +19,55 @@ class LeaderboardController extends Controller
 
     public function __invoke(): View
     {
-        $topCredits = PlayerData::query()
-            ->whereNotIn('player_id', $this->staffIds)
-            ->orderByDesc('credit_balance')
-            ->take(9)
-            ->with([
-                'player:id,username',
-                'player.avatar:player_id,figure_code',
-            ])
-            ->get();
-
-        $getBalanceTop = function (string $column) {
-            return PlayerData::query()
-                ->whereNotIn('player_id', $this->staffIds)
-                ->orderByDesc($column)
-                ->take(9)
-                ->with([
-                    'player:id,username',
-                    'player.avatar:player_id,figure_code',
-                ])
-                ->get();
-        };
+        $limit = (int) config('leaderboard.limit', 10);
 
         return view('leaderboard', [
-            'credits' => $topCredits,
-            'duckets' => $getBalanceTop('pixel_balance'),
-            'diamonds' => $getBalanceTop('seasonal_balance'),
-            'gotw' => $this->retrieveStats('gotw_points'),
-            'respectsReceived' => $this->retrieveStats('respect_points'),
-            'achievementScores' => $this->retrieveStats('achievement_score'),
+            'credits'           => $this->topByColumn('credit_balance', $limit),
+            'duckets'           => $this->topByColumn('pixel_balance', $limit),
+            'diamonds'          => $this->topByColumn('seasonal_balance', $limit),
+            'gotw'              => $this->topByColumn('gotw_points', $limit),
+            'respectsReceived'  => $this->topRespectsReceived($limit),
+            'achievementScores' => $this->topByColumn('achievement_score', $limit),
         ]);
     }
 
-    private function retrieveStats(string $column)
+    /**
+     * Base query: non-staff players, joined to `players` so we can use the username as a stable
+     * tiebreak, with the player + avatar eager-loaded for the view.
+     */
+    private function baseQuery(int $limit)
     {
-        return PlayerData::select('player_id', $column)
-            ->whereNotIn('player_id', $this->staffIds)
-            ->orderByDesc($column)
-            ->take(9)
+        return PlayerData::query()
+            ->whereNotIn('player_data.player_id', $this->staffIds)
+            ->join('players', 'players.id', '=', 'player_data.player_id')
+            ->select('player_data.*')
+            ->take($limit)
             ->with([
                 'player:id,username',
                 'player.avatar:player_id,figure_code',
-            ])
+            ]);
+    }
+
+    /** Top players by a stored player_data column (credits, duckets, score, …). */
+    private function topByColumn(string $column, int $limit): Collection
+    {
+        return $this->baseQuery($limit)
+            ->orderByDesc('player_data.' . $column)
+            ->orderBy('players.username')
+            ->get();
+    }
+
+    /**
+     * Top players by respects RECEIVED. These live in `player_respects` (one row per respect,
+     * keyed by target_player_id) — NOT player_data.respect_points, which is the daily allowance of
+     * respects a player can still give. Exposed to the view as the `respects_received` attribute.
+     */
+    private function topRespectsReceived(int $limit): Collection
+    {
+        return $this->baseQuery($limit)
+            ->selectRaw('(SELECT COUNT(*) FROM player_respects WHERE player_respects.target_player_id = player_data.player_id) AS respects_received')
+            ->orderByDesc('respects_received')
+            ->orderBy('players.username')
             ->get();
     }
 }

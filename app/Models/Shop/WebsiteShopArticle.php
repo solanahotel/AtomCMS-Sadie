@@ -30,6 +30,11 @@ class WebsiteShopArticle extends Model
         return $this->belongsTo(Role::class, 'give_rank');
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(WebsiteShopCategory::class, 'website_shop_category_id');
+    }
+
     public function features(): HasMany
     {
         return $this->HasMany(WebsiteShopArticleFeature::class, 'article_id', 'id');

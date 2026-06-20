@@ -21,6 +21,7 @@ Route::get('/online-count', [HotelApiController::class, 'onlineUserCount'])->nam
 use App\Http\Controllers\Api\WalletAuthController;
 
 Route::prefix('wallet')->group(function () {
+    Route::get('/balances', [\App\Http\Controllers\Api\WalletBalanceController::class, 'balances'])->middleware('throttle:120,1');
     Route::post('/challenge', [WalletAuthController::class, 'challenge']);
     Route::post('/verify',    [WalletAuthController::class, 'verify']);
     Route::post('/register',  [WalletAuthController::class, 'register']);
@@ -33,6 +34,11 @@ use App\Http\Controllers\Api\ClubPaymentController;
 Route::get('/club/packages', [ClubPaymentController::class, 'packages'])->middleware('throttle:60,1');
 
 // Internal: called server-to-server by the emulator (X-Internal-Secret). Not for clients.
+Route::prefix('internal/hotel')->group(function () {
+    Route::post('/intent', [\App\Http\Controllers\Api\CreditExchangeController::class, 'intent']);
+    Route::post('/verify', [\App\Http\Controllers\Api\CreditExchangeController::class, 'verify']);
+});
+
 Route::prefix('internal/club')->group(function () {
     Route::post('/intent', [ClubPaymentController::class, 'intent']);
     Route::post('/verify', [ClubPaymentController::class, 'verify']);

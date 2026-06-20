@@ -31,4 +31,40 @@ return [
     // Allow the paid amount to be slightly under the quoted lamports to absorb
     // tiny price drift between intent and payment (0.5% default). Never below.
     'amount_tolerance_bps' => (int) env('SOLANA_AMOUNT_TOLERANCE_BPS', 50),
+
+    // =====================================================================
+    //  $HOTEL token (Phase 5). Fill these in via .env once the token exists.
+    //  Until the mint + wallets are set, the access gate and the Credit
+    //  Exchange on-chain settlement stay DISABLED — nothing breaks, and you
+    //  flip the two `*_enabled` flags to turn it on. See Housekeeping ->
+    //  Marketplace -> "$HOTEL / Crypto" for a live checklist of what's set.
+    // =====================================================================
+    'hotel' => [
+        // The $HOTEL SPL token mint address (blank until the token is created).
+        'mint' => env('HOTEL_MINT', ''),
+        // SPL token decimals (commonly 6 or 9).
+        'decimals' => (int) env('HOTEL_DECIMALS', 9),
+        // Treasury wallet that receives the 5% fee (later burned in batches).
+        'treasury_wallet' => env('HOTEL_TREASURY_WALLET', env('SOLANA_TREASURY_WALLET', '')),
+        // Dedicated burn wallet — holds only fee tokens, burned on a cadence.
+        'burn_wallet' => env('HOTEL_BURN_WALLET', ''),
+        // Marketplace fee on $HOTEL trades (percent). 95/5 split by default.
+        'fee_percent' => (float) env('HOTEL_FEE_PERCENT', 5),
+
+        // ACCESS GATE — minimum $HOTEL a wallet must hold to play. DISABLED by
+        // default (per owner: leave off until the token is live).
+        'access_gate' => [
+            'enabled' => filter_var(env('HOTEL_ACCESS_GATE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'amount'  => (int) env('HOTEL_ACCESS_GATE_AMOUNT', 1000),
+        ],
+
+        // CREDIT EXCHANGE on-chain settlement. DISABLED until mint + wallets are
+        // set — the in-game "Buy ($HOTEL)" stays inert while this is off.
+        'exchange_enabled' => filter_var(env('HOTEL_EXCHANGE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+
+        // Confirmation level required before releasing items, and how long a buy
+        // intent / its locked price stays valid.
+        'min_confirmation' => env('HOTEL_MIN_CONFIRMATION', 'finalized'),
+        'intent_ttl_seconds' => (int) env('HOTEL_INTENT_TTL', 900),
+    ],
 ];
